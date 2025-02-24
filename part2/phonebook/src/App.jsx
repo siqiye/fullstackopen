@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import personServices from './services/persons'
+import './index.css'
 
 // 过滤组件
 const Filter = ({filter, handleFilterChange}) => (
@@ -43,6 +44,44 @@ const Persons = ({personsToShow, deletePerson}) => (
   </div>
 );
 
+// 用于显示错误提示的组件
+const Notification = ({ message }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className='error'>
+      {message}
+    </div>
+  )
+}
+
+// 用于显示成功提示的组件（绿色样式）
+const SuccessNotification = ({ message }) => {
+  if (message === null) {
+    return null;
+  }
+  return (
+    <div className="success">
+      {message}
+    </div>
+  );
+};
+
+const Footer = () => {
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: 16
+  }
+  return (
+    <div style={footerStyle}>
+      <br />
+      <em>Note app, Department of Computer Science, University of Helsinki 2022</em>
+    </div>
+  )
+}
 
 
 
@@ -54,6 +93,8 @@ const App = () => {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [filter, setFilter] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null);
 
   // 获取初始联系人数据
   useEffect(() => {
@@ -73,7 +114,10 @@ const App = () => {
 
     if(existingPerson) {
       if(existingPerson.number === newNumber) {
-        alert(`${newName} is already added to phonebook`);
+        setErrorMessage(`${newName} is already added to phonebook`);
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 5000);
         return;
       }else {
         if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
@@ -84,9 +128,18 @@ const App = () => {
               setPersons(persons.map(p => p.id != existingPerson.id? p: returnedData));
               setNewName('');
               setNewNumber('');
+              setSuccessMessage(`Updated ${newName}'s number`);
+              setTimeout(() => {
+                setSuccessMessage(null);
+              }, 5000);
             })
             .catch(error => {
-              alert(`the person '${newName}' was already deleted from server`)
+              setErrorMessage(
+                `the person '${newName}' was already deleted from server`
+              );
+              setTimeout(() => {
+                setErrorMessage(null);
+              }, 5000);
             })
         }
         return;
@@ -99,6 +152,10 @@ const App = () => {
         setPersons(persons.concat(returnedData));
         setNewName('');
         setNewNumber('');
+        setSuccessMessage(`Added ${newName}`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 5000);
       })
   };
 
@@ -112,7 +169,10 @@ const App = () => {
           setPersons(persons.filter(p => p.id !== id))
         })
         .catch(error => {
-          alert("Failed to delete the person from the server.");
+          setErrorMessage("Failed to delete the person from the server.");
+          setTimeout(() => {
+            setErrorMessage(null);
+          }, 5000);
         })
     }
   }
@@ -139,6 +199,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={errorMessage}/>
+      <SuccessNotification message={successMessage} />
       <Filter filter={filter} handleFilterChange={handleFilterChange} />
 
       <h3>add a new</h3>
@@ -152,6 +214,7 @@ const App = () => {
 
       <h3>Numbers</h3>
       <Persons personsToShow={personsToShow} deletePerson={deletePerson}/>
+      <Footer />
     </div>
   );
 };
