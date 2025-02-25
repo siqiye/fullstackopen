@@ -1,7 +1,26 @@
 const express = require("express");
+const morgan = require('morgan')  // 引入 Morgan
 const app = express();
 
+// 使用 JSON 解析中间件
 app.use(express.json())
+
+// 创建一个自定义令牌，用于获取请求体并转成字符串
+morgan.token('body', (req) => {
+  return JSON.stringify(req.body)
+})
+
+// 使用自定义格式，其中包含了 :body 令牌
+app.use(morgan((tokens, req, res) => {
+  return [
+    tokens.method(req, res),          // 请求方法 (GET, POST, etc.)
+    tokens.url(req, res),             // 请求路径
+    tokens.status(req, res),          // 响应状态码
+    tokens.res(req, res, 'content-length'), '-', 
+    tokens['response-time'](req, res), 'ms', 
+    tokens.body(req, res)             // 我们自定义的 body 令牌
+  ].join(' ')
+}))
 
 let persons = [
   {
